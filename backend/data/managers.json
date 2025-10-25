@@ -1,0 +1,24 @@
+[
+  {
+    "id": "manager_avery",
+    "displayName": "Avery Holt",
+    "email": "manager@bountyai.dev",
+    "organization": "Orion Command",
+    "roles": ["manager"],
+    "tenantId": "default",
+    "timezone": "America/Los_Angeles",
+    "createdAt": "2025-01-12T10:00:00Z",
+    "updatedAt": "2025-10-24T12:00:00Z"
+  },
+  {
+    "id": "manager_samir",
+    "displayName": "Samir Qureshi",
+    "email": "samir@bountyai.dev",
+    "organization": "Nebula Ops",
+    "roles": ["manager"],
+    "tenantId": "default",
+    "timezone": "America/Chicago",
+    "createdAt": "2025-03-08T09:15:00Z",
+    "updatedAt": "2025-10-24T11:30:00Z"
+  }
+]

@@ -1,0 +1,44 @@
+[
+  {
+    "id": "assign_001",
+    "projectId": "bounty_001",
+    "teamId": "team_alpha",
+    "tenantId": "default",
+    "status": "in-progress",
+    "fitScore": 0.91,
+    "reasoning": "Alpha Pilots have the exact front-end skill coverage and availability window to hit the deadline.",
+    "developerIds": ["dev_lena"],
+    "progress": 62,
+    "startDate": "2025-10-10T09:00:00Z",
+    "dueDate": "2025-11-12T18:00:00Z",
+    "updatedAt": "2025-10-23T14:45:00Z"
+  },
+  {
+    "id": "assign_002",
+    "projectId": "bounty_002",
+    "teamId": "team_beta",
+    "tenantId": "default",
+    "status": "in-progress",
+    "fitScore": 0.88,
+    "reasoning": "Beta Crew owns the API stack and has spare capacity for an additional backend-heavy bounty.",
+    "developerIds": ["dev_samuel"],
+    "progress": 48,
+    "startDate": "2025-10-05T14:00:00Z",
+    "dueDate": "2025-11-25T18:00:00Z",
+    "updatedAt": "2025-10-22T08:30:00Z"
+  },
+  {
+    "id": "assign_003",
+    "projectId": "bounty_003",
+    "teamId": "team_gamma",
+    "tenantId": "default",
+    "status": "blocked",
+    "fitScore": 0.83,
+    "reasoning": "Gamma Squadron leads deployments but is waiting on env credentials from Ops.",
+    "developerIds": ["dev_amara"],
+    "progress": 35,
+    "startDate": "2025-09-28T10:30:00Z",
+    "dueDate": "2025-11-18T18:00:00Z",
+    "updatedAt": "2025-10-23T09:20:00Z"
+  }
+]

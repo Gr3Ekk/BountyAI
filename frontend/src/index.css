@@ -1,0 +1,49 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+:root {
+  color-scheme: only light;
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    background-image: radial-gradient(circle at 20% 20%, rgba(177, 119, 255, 0.12), transparent 55%),
+      radial-gradient(circle at 80% 0%, rgba(47, 255, 243, 0.18), transparent 45%),
+      radial-gradient(circle at 50% 100%, rgba(255, 138, 76, 0.12), transparent 55%);
+    min-height: 100vh;
+  }
+
+  #root {
+    @apply min-h-screen;
+  }
+
+  a {
+    @apply text-foreground/80 transition-colors duration-200;
+  }
+
+  a:hover {
+    @apply text-neon-teal;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: rgba(12, 13, 17, 0.08);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(12, 13, 17, 0.45);
+    border-radius: 9999px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(12, 13, 17, 0.65);
+  }
+}
