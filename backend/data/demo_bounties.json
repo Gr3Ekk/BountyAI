@@ -1,0 +1,297 @@
+[
+  {
+    "id": "bounty_sb_001",
+    "title": "Add Batch Operations API",
+    "description": "Create API endpoints for bulk operations like assigning multiple tasks or updating team memberships.",
+    "estimatedHours": 9,
+    "skills": [
+      "backend",
+      "python",
+      "api",
+      "database"
+    ],
+    "type": "bounty",
+    "priority": "medium",
+    "isPublic": true,
+    "status": "open",
+    "reward": 750,
+    "createdBy": "manager@bountyai.dev",
+    "createdAt": 1761210178922,
+    "deadline": "2025-11-13"
+  },
+  {
+    "id": "bounty_sb_002",
+    "title": "Create Analytics Dashboard",
+    "description": "Build analytics dashboard showing team productivity, project velocity, and completion trends.",
+    "estimatedHours": 18,
+    "skills": [
+      "frontend",
+      "react",
+      "data-visualization"
+    ],
+    "type": "bounty",
+    "priority": "low",
+    "isPublic": true,
+    "status": "open",
+    "reward": 1300,
+    "createdBy": "manager@bountyai.dev",
+    "createdAt": 1761382978922,
+    "deadline": "2025-11-24"
+  },
+  {
+    "id": "bounty_sb_003",
+    "title": "Add Webhook Integration",
+    "description": "Create webhook system to notify external services of assignment updates and completions.",
+    "estimatedHours": 8,
+    "skills": [
+      "backend",
+      "python",
+      "api"
+    ],
+    "type": "bounty",
+    "priority": "low",
+    "isPublic": true,
+    "status": "open",
+    "reward": 650,
+    "createdBy": "manager@bountyai.dev",
+    "createdAt": 1761123778922,
+    "deadline": "2025-11-21"
+  },
+  {
+    "id": "bounty_sb_004",
+    "title": "Create Mobile Responsive Layout",
+    "description": "Optimize all dashboard views for mobile devices with responsive breakpoints and touch interactions.",
+    "estimatedHours": 20,
+    "skills": [
+      "frontend",
+      "react",
+      "ui/ux",
+      "css"
+    ],
+    "type": "bounty",
+    "priority": "medium",
+    "isPublic": true,
+    "status": "in-progress",
+    "reward": 1200,
+    "createdBy": "manager@bountyai.dev",
+    "createdAt": 1761382978922,
+    "deadline": "2025-11-05",
+    "claimedBy": "dev_marcus",
+    "claimedByName": "Marcus Chen",
+    "claimedAt": 1761210178922
+  },
+  {
+    "id": "bounty_sb_005",
+    "title": "Add Data Export Feature",
+    "description": "Allow managers to export project and team data to CSV/Excel format with filtering options.",
+    "estimatedHours": 7,
+    "skills": [
+      "frontend",
+      "backend",
+      "react"
+    ],
+    "type": "bounty",
+    "priority": "low",
+    "isPublic": true,
+    "status": "open",
+    "reward": 600,
+    "createdBy": "manager@bountyai.dev",
+    "createdAt": 1761037378922,
+    "deadline": "2025-11-19"
+  },
+  {
+    "id": "bounty_sb_006",
+    "title": "Add File Upload Support",
+    "description": "Implement file upload feature for project attachments with cloud storage integration (S3/GCS).",
+    "estimatedHours": 10,
+    "skills": [
+      "backend",
+      "frontend",
+      "api",
+      "infrastructure"
+    ],
+    "type": "bounty",
+    "priority": "medium",
+    "isPublic": true,
+    "status": "open",
+    "reward": 850,
+    "createdBy": "manager@bountyai.dev",
+    "createdAt": 1760950978922,
+    "deadline": "2025-11-12"
+  },
+  {
+    "id": "bounty_sb_007",
+    "title": "Optimize Database Queries",
+    "description": "Profile and optimize slow database queries in the assignment listing endpoint. Target 50% performance improvement.",
+    "estimatedHours": 8,
+    "skills": [
+      "backend",
+      "database",
+      "performance"
+    ],
+    "type": "bounty",
+    "priority": "high",
+    "isPublic": true,
+    "status": "open",
+    "reward": 750,
+    "createdBy": "manager@bountyai.dev",
+    "createdAt": 1760691778922,
+    "deadline": "2025-11-06"
+  },
+  {
+    "id": "bounty_sb_008",
+    "title": "Implement Search Functionality",
+    "description": "Add global search feature to find projects, teams, and developers with fuzzy matching.",
+    "estimatedHours": 12,
+    "skills": [
+      "frontend",
+      "backend",
+      "react",
+      "api"
+    ],
+    "type": "bounty",
+    "priority": "medium",
+    "isPublic": true,
+    "status": "open",
+    "reward": 900,
+    "createdBy": "manager@bountyai.dev",
+    "createdAt": 1760778178922,
+    "deadline": "2025-11-03"
+  },
+  {
+    "id": "bounty_sb_009",
+    "title": "Add Dark Mode Toggle",
+    "description": "Implement a dark mode toggle in the settings panel with persistent user preference storage.",
+    "estimatedHours": 6,
+    "skills": [
+      "frontend",
+      "react",
+      "ui/ux"
+    ],
+    "type": "bounty",
+    "priority": "medium",
+    "isPublic": true,
+    "status": "open",
+    "reward": 500,
+    "createdBy": "manager@bountyai.dev",
+    "createdAt": 1760691778922,
+    "deadline": "2025-11-01"
+  },
+  {
+    "id": "bounty_sb_010",
+    "title": "Setup Monitoring and Alerting",
+    "description": "Configure application monitoring with Sentry/Datadog and set up alerts for errors and performance issues.",
+    "estimatedHours": 6,
+    "skills": [
+      "devops",
+      "backend",
+      "infrastructure"
+    ],
+    "type": "bounty",
+    "priority": "high",
+    "isPublic": true,
+    "status": "open",
+    "reward": 600,
+    "createdBy": "manager@bountyai.dev",
+    "createdAt": 1760778178922,
+    "deadline": "2025-11-17"
+  },
+  {
+    "id": "bounty_sb_011",
+    "title": "Write Unit Tests for Auth Module",
+    "description": "Add comprehensive unit tests for authentication service with 80%+ code coverage.",
+    "estimatedHours": 5,
+    "skills": [
+      "backend",
+      "testing",
+      "python"
+    ],
+    "type": "bounty",
+    "priority": "medium",
+    "isPublic": true,
+    "status": "open",
+    "reward": 450,
+    "createdBy": "manager@bountyai.dev",
+    "createdAt": 1760778178922,
+    "deadline": "2025-11-13"
+  },
+  {
+    "id": "bounty_sb_012",
+    "title": "Create API Documentation",
+    "description": "Document all REST API endpoints with OpenAPI/Swagger specs including request/response examples.",
+    "estimatedHours": 4,
+    "skills": [
+      "backend",
+      "documentation",
+      "api"
+    ],
+    "type": "bounty",
+    "priority": "low",
+    "isPublic": true,
+    "status": "in-progress",
+    "reward": 400,
+    "createdBy": "manager@bountyai.dev",
+    "createdAt": 1761210178922,
+    "deadline": "2025-11-22",
+    "claimedBy": "dev_lena",
+    "claimedByName": "Lena Park",
+    "claimedAt": 1761469378922
+  },
+  {
+    "id": "bounty_sb_013",
+    "title": "Fix Security Vulnerabilities",
+    "description": "Address security issues identified in latest dependency audit (XSS, CSRF protection).",
+    "estimatedHours": 7,
+    "skills": [
+      "backend",
+      "frontend",
+      "security"
+    ],
+    "type": "bounty",
+    "priority": "urgent",
+    "isPublic": true,
+    "status": "open",
+    "reward": 700,
+    "createdBy": "manager@bountyai.dev",
+    "createdAt": 1760950978922,
+    "deadline": "2025-11-25"
+  },
+  {
+    "id": "bounty_sb_014",
+    "title": "Add Rate Limiting to API",
+    "description": "Implement rate limiting middleware to prevent API abuse and ensure fair usage.",
+    "estimatedHours": 5,
+    "skills": [
+      "backend",
+      "api",
+      "security"
+    ],
+    "type": "bounty",
+    "priority": "high",
+    "isPublic": true,
+    "status": "open",
+    "reward": 500,
+    "createdBy": "manager@bountyai.dev",
+    "createdAt": 1761123778922,
+    "deadline": "2025-11-04"
+  },
+  {
+    "id": "bounty_sb_015",
+    "title": "Implement Drag-and-Drop Kanban",
+    "description": "Build a kanban board with drag-and-drop functionality for task management and status updates.",
+    "estimatedHours": 16,
+    "skills": [
+      "frontend",
+      "react",
+      "ui/ux"
+    ],
+    "type": "bounty",
+    "priority": "low",
+    "isPublic": true,
+    "status": "open",
+    "reward": 1100,
+    "createdBy": "manager@bountyai.dev",
+    "createdAt": 1760778178922,
+    "deadline": "2025-11-07"
+  }
+]

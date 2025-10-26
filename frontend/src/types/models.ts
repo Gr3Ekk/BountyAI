@@ -16,6 +16,15 @@ export type AssignmentStatus =
   | 'completed'
   | string;
 
+// Task type classification
+export type TaskType = 'team-assignment' | 'bounty';
+
+// Bounty status lifecycle
+export type BountyStatus = 'open' | 'claimed' | 'in-progress' | 'review' | 'completed' | 'cancelled';
+
+// Task priority levels
+export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent';
+
 export interface Team {
   id: string;
   name: string;
@@ -98,4 +107,54 @@ export interface ManagerProfile {
   timezone?: string;
   createdAt?: string;
   updatedAt?: string;
+}
+
+// Task interface with support for both team assignments and bounties
+export interface Task {
+  id: string;
+  title: string;
+  description: string;
+  estimatedHours: number;
+  skills: string[];
+  type: TaskType;
+  priority?: TaskPriority;
+  
+  // For team assignments
+  assignedToId?: string;
+  assignedToName?: string;
+  teamId?: string;
+  
+  // For bounties
+  isPublic?: boolean;
+  claimedBy?: string;
+  claimedByName?: string;
+  claimedAt?: number;
+  status?: BountyStatus;
+  
+  // Common fields
+  projectId?: string;
+  assignmentId?: string;
+  createdBy?: string;
+  createdAt?: number;
+  updatedAt?: number;
+  completedAt?: number;
+  deadline?: string;
+}
+
+// Bounty-specific interface extending Task
+export interface Bounty extends Task {
+  type: 'bounty';
+  isPublic: true;
+  status: BountyStatus;
+  reward?: number;
+  requiredSkills: string[];
+  linkedProjectId?: string;
+}
+
+// Assignment task interface
+export interface AssignmentTask extends Task {
+  type: 'team-assignment';
+  assignedToId: string;
+  assignedToName: string;
+  teamId: string;
 }

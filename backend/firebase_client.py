@@ -28,6 +28,7 @@ from typing import Dict, Optional
 
 import firebase_admin
 from firebase_admin import credentials, firestore
+from google.auth.exceptions import DefaultCredentialsError
 
 CredentialDict = Dict[str, object]
 
@@ -102,7 +103,12 @@ def get_firestore_client() -> firestore.Client:
     if emulator_host:
         os.environ.setdefault("FIRESTORE_EMULATOR_HOST", emulator_host)
 
-    return firestore.client(app=app)
+    try:
+        return firestore.client(app=app)
+    except DefaultCredentialsError as exc:
+        raise FirebaseInitializationError(
+            "Default application credentials not available."
+        ) from exc
 
 
 __all__ = [

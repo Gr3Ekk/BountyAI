@@ -37,6 +37,10 @@ cp .env.example .env
 | `VITE_FIREBASE_MESSAGING_SENDER_ID` | Sender ID |
 | `VITE_FIREBASE_APP_ID` | Web app ID |
 | `VITE_FIREBASE_MEASUREMENT_ID` | (Optional) Analytics ID |
+| `VITE_FIREBASE_DEFAULT_TENANT_ID` | (Optional) Tenant namespace for Firestore collections (defaults to `default`) |
+| `VITE_CLOUDFLARE_WORKER_URL` | (Optional) Cloudflare Worker endpoint that proxies Workers AI |
+| `VITE_CLOUDFLARE_WORKER_TOKEN` | (Optional) Bearer token forwarded with copilot requests |
+| `VITE_API_BASE_URL` | (Optional) FastAPI backend base URL (defaults to `http://localhost:8000`) |
 
 3. (Optional) Enable local emulators for offline development by setting:
 
@@ -45,6 +49,13 @@ VITE_FIREBASE_USE_EMULATOR=true
 VITE_FIRESTORE_EMULATOR_HOST=localhost:8080
 VITE_FIREBASE_AUTH_EMULATOR_HOST=http://localhost:9099
 ```
+
+4. (Optional) Wire up the **AI Launch Copilot** to Cloudflare Workers AI:
+
+	- Deploy a Worker that forwards requests to your chosen Workers AI model.
+	- Set `VITE_CLOUDFLARE_WORKER_URL` to the Worker endpoint (e.g. `https://your-worker.workers.dev/chat`).
+	- If the Worker expects a bearer token, add it to `VITE_CLOUDFLARE_WORKER_TOKEN`.
+	- Leaving both values blank enables the built-in simulator so the UI still functions during local development.
 
 ## 📦 Installation
 

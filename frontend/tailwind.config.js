@@ -12,7 +12,7 @@ export default {
         background: '#f6f7fb',
         foreground: '#0c0d11',
         neon: {
-          teal: '#2ffff3',
+          teal: '#4b2dbf',
           purple: '#b177ff',
           orange: '#ff8a4c',
         },
@@ -24,7 +24,7 @@ export default {
         mono: ['"IBM Plex Mono"', 'ui-monospace', 'SFMono-Regular', 'monospace'],
       },
       boxShadow: {
-        glow: '0 0 20px 0 rgba(47, 255, 243, 0.35)',
+        glow: '0 0 20px 0 rgba(75, 45, 191, 0.45)',
         panel: '0 18px 35px -15px rgba(12, 13, 17, 0.65)',
       },
       backdropBlur: {

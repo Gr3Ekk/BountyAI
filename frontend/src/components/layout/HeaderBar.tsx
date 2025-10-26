@@ -2,7 +2,7 @@ import { useLocation } from 'react-router-dom';
 
 const viewTitles: Record<string, { title: string; subtitle: string }> = {
   '/manager': {
-    title: 'Mission Control Overview',
+    title: 'Bounty Control Dashboard',
     subtitle: 'Track team output, workloads, and launch new bounties.',
   },
   '/developer': {

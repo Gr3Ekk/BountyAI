@@ -17,11 +17,15 @@ import string
 from datetime import datetime
 from typing import Dict, List, Optional, Set
 
+from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from firebase_admin import firestore as admin_firestore
 from google.cloud import exceptions
 from pydantic import BaseModel
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Import the ML model for bounty assignment
 from ml_model import assign_bounty as ml_assign_bounty
@@ -84,6 +88,113 @@ class TeamCreateResponse(BaseModel):
     joinCode: str
 
 
+class DirectAssignmentRequest(BaseModel):
+    """Request body for directly assigning a project to a team"""
+    projectId: str
+    teamId: str
+    reasoning: Optional[str] = None
+
+
+class TaskDetail(BaseModel):
+    """Individual task within a project"""
+    id: str
+    title: str
+    description: str
+    assignedTo: Optional[str] = None  # developer ID
+    assignedToName: Optional[str] = None  # developer name
+    estimatedHours: float
+    skills: List[str]
+    status: str = "pending"
+    type: str = "team-assignment"  # NEW: "team-assignment" or "bounty"
+    priority: Optional[str] = "medium"  # NEW: "low", "medium", "high", "urgent"
+
+
+class DirectAssignmentResponse(BaseModel):
+    """Response for direct assignment with timeline"""
+    success: bool
+    assignmentId: str
+    projectId: str
+    teamId: str
+    teamName: str
+    tasks: List[TaskDetail]
+    message: str
+
+
+class BountyCreateRequest(BaseModel):
+    """Request body for creating a new bounty"""
+    title: str
+    description: str
+    estimatedHours: float
+    skills: List[str]
+    priority: Optional[str] = "medium"
+    linkedProjectId: Optional[str] = None
+    reward: Optional[float] = None
+    deadline: Optional[str] = None
+
+
+class BountyResponse(BaseModel):
+    """Response for bounty operations"""
+    id: str
+    title: str
+    description: str
+    estimatedHours: float
+    skills: List[str]
+    status: str
+    priority: str
+    createdBy: Optional[str] = "system"
+    createdAt: int
+    claimedBy: Optional[str] = None
+    claimedByName: Optional[str] = None
+    claimedAt: Optional[int] = None
+    linkedProjectId: Optional[str] = None
+    reward: Optional[float] = None
+    deadline: Optional[str] = None
+
+
+class BountyListResponse(BaseModel):
+    """Response for listing bounties"""
+    bounties: List[BountyResponse]
+    total: int
+
+
+class BountyClaimRequest(BaseModel):
+    """Request body for claiming a bounty"""
+    developerId: str
+    developerName: str
+
+
+class FinalizeTaskDetail(BaseModel):
+    """Task detail for finalization"""
+    id: str
+    title: str
+    description: str
+    estimatedHours: float
+    skills: List[str]
+    type: str  # "team-assignment" or "bounty"
+    priority: Optional[str] = "medium"
+    assignedToId: Optional[str] = None
+    assignedToName: Optional[str] = None
+    status: Optional[str] = None
+
+
+class FinalizeAssignmentRequest(BaseModel):
+    """Request body for finalizing an assignment"""
+    assignmentId: str
+    projectId: str
+    teamId: str
+    teamTasks: List[FinalizeTaskDetail]
+    bountyTasks: List[FinalizeTaskDetail]
+
+
+class FinalizeAssignmentResponse(BaseModel):
+    """Response for finalization"""
+    success: bool
+    assignmentId: str
+    teamTasksCount: int
+    bountiesCreated: int
+    message: str
+
+
 # ============================================================================
 # Helper Functions
 # ============================================================================
@@ -111,9 +222,18 @@ DEFAULT_TENANT_ID = os.getenv("FIREBASE_DEFAULT_TENANT_ID", "default")
 
 
 def _ensure_document_id(data: Dict, document_id: str) -> Dict:
-    if "id" not in data:
-        data = {**data, "id": document_id}
-    return data
+    current_id = data.get("id")
+    if current_id == document_id:
+        return data
+
+    if current_id and current_id != document_id:
+        logger.debug(
+            "Firestore document id mismatch detected; overriding stale id (doc=%s, stale=%s)",
+            document_id,
+            current_id,
+        )
+
+    return {**data, "id": document_id}
 
 
 async def _fetch_tenant_collection(collection_name: str) -> List[Dict]:
@@ -162,6 +282,130 @@ async def load_teams() -> List[Dict]:
 
 async def load_projects() -> List[Dict]:
     return await load_dataset("projects", "data/projects.json")
+
+
+async def load_developers() -> List[Dict]:
+    return await load_dataset("developers", "data/developers.json")
+
+
+def generate_initial_tasks(project: Dict, team: Dict, developers: List[Dict]) -> List[Dict]:
+    """Generate initial task breakdown based on project requirements and team composition
+    
+    Automatically classifies tasks as either 'team-assignment' or 'bounty' based on:
+    - Estimated hours (< 4 = bounty candidate)
+    - Required skills (1-2 skills = bounty, multiple = team)
+    - Task complexity (self-contained = bounty)
+    """
+    team_members = [dev for dev in developers if dev.get("primaryTeamId") == team.get("id")]
+    
+    if not team_members:
+        # Fallback: create generic tasks
+        return []
+    
+    estimated_hours = project.get("estimatedHours") or project.get("estimated_hours") or 40
+    required_skills = project.get("required_skills") or project.get("skillsRequired") or []
+    
+    tasks = []
+    task_templates = {
+        "frontend": [
+            {"title": "UI Component Development", "pct": 0.35, "desc": "Build and style user interface components", "complexity": "high"},
+            {"title": "Frontend Integration", "pct": 0.25, "desc": "Integrate frontend with backend APIs", "complexity": "high"},
+            {"title": "Testing & Polish", "pct": 0.15, "desc": "Test UI across devices and polish interactions", "complexity": "medium"},
+            {"title": "Fix UI Bugs", "pct": 0.05, "desc": "Fix reported UI bugs and styling issues", "complexity": "low"},
+        ],
+        "backend": [
+            {"title": "API Development", "pct": 0.30, "desc": "Design and implement RESTful API endpoints", "complexity": "high"},
+            {"title": "Database Schema", "pct": 0.20, "desc": "Design and implement database models", "complexity": "high"},
+            {"title": "Business Logic", "pct": 0.25, "desc": "Implement core business logic and validation", "complexity": "high"},
+            {"title": "Write Unit Tests", "pct": 0.08, "desc": "Add unit tests for API endpoints", "complexity": "low"},
+        ],
+        "fullstack": [
+            {"title": "Full-Stack Integration", "pct": 0.35, "desc": "End-to-end feature implementation", "complexity": "high"},
+            {"title": "API & Database", "pct": 0.30, "desc": "Backend services and data layer", "complexity": "high"},
+        ],
+        "devops": [
+            {"title": "Infrastructure Setup", "pct": 0.30, "desc": "Configure deployment infrastructure", "complexity": "high"},
+            {"title": "CI/CD Pipeline", "pct": 0.25, "desc": "Set up continuous integration and deployment", "complexity": "high"},
+            {"title": "Update Config", "pct": 0.05, "desc": "Update deployment configuration files", "complexity": "low"},
+        ],
+        "ai/ml": [
+            {"title": "Model Development", "pct": 0.35, "desc": "Design and train machine learning model", "complexity": "high"},
+            {"title": "Data Pipeline", "pct": 0.25, "desc": "Build data processing and feature engineering pipeline", "complexity": "high"},
+        ],
+        "database": [
+            {"title": "Schema Design", "pct": 0.25, "desc": "Design optimized database schema", "complexity": "high"},
+            {"title": "Query Optimization", "pct": 0.20, "desc": "Optimize queries and indexes", "complexity": "medium"},
+        ],
+    }
+    
+    # Determine which templates to use based on required skills
+    selected_templates = []
+    for skill in required_skills:
+        if skill in task_templates:
+            selected_templates.extend(task_templates[skill])
+    
+    # Fallback to generic tasks if no matches
+    if not selected_templates:
+        selected_templates = [
+            {"title": "Planning & Design", "pct": 0.20, "desc": "Project planning and technical design", "complexity": "medium"},
+            {"title": "Core Development", "pct": 0.45, "desc": "Implement core functionality", "complexity": "high"},
+            {"title": "Testing & QA", "pct": 0.20, "desc": "Test and quality assurance", "complexity": "medium"},
+            {"title": "Documentation", "pct": 0.15, "desc": "Write technical documentation", "complexity": "low"},
+        ]
+    
+    # Assign tasks to team members based on skill match
+    for idx, template in enumerate(selected_templates[:7]):  # Max 7 tasks (allow for some bounties)
+        task_hours = estimated_hours * template["pct"]
+        task_skills = [s for s in required_skills if s in template["title"].lower() or s in template["desc"].lower()]
+        if not task_skills and required_skills:
+            task_skills = [required_skills[0]]
+        
+        # Determine task type based on complexity
+        complexity = template.get("complexity", "medium")
+        is_bounty = (
+            task_hours < 4 and  # Less than 4 hours
+            len(task_skills) <= 2 and  # Single or dual skill requirement
+            complexity == "low"  # Low complexity
+        )
+        
+        task_type = "bounty" if is_bounty else "team-assignment"
+        priority = "low" if is_bounty else "medium"
+        
+        # Find best developer for this task
+        best_dev = team_members[0]  # Default to first
+        best_match = 0
+        for dev in team_members:
+            dev_skills = set(dev.get("skills", []))
+            task_skill_set = set(task_skills)
+            match_score = len(dev_skills & task_skill_set)
+            if match_score > best_match:
+                best_match = match_score
+                best_dev = dev
+        
+        task_dict = {
+            "id": f"task_{idx + 1}",
+            "title": template["title"],
+            "description": template["desc"],
+            "estimatedHours": round(task_hours, 1),
+            "skills": task_skills,
+            "status": "pending" if task_type == "team-assignment" else "open",
+            "type": task_type,
+            "priority": priority,
+        }
+        
+        # Only assign to developer if it's a team task
+        if task_type == "team-assignment":
+            task_dict["assignedTo"] = best_dev.get("id")  # For backward compatibility
+            task_dict["assignedToId"] = best_dev.get("id")
+            task_dict["assignedToName"] = best_dev.get("displayName", "Unknown")
+        else:
+            task_dict["assignedTo"] = None
+            task_dict["assignedToId"] = None
+            task_dict["assignedToName"] = None
+        
+        tasks.append(task_dict)
+    
+    return tasks
 
 
 async def _fetch_existing_join_codes(tenant_id: str) -> Set[str]:
@@ -515,6 +759,556 @@ async def create_team(request: TeamCreateRequest):
         raise HTTPException(status_code=500, detail=f"Firestore error: {exc}") from exc
 
     return TeamCreateResponse(success=True, teamId=team_id, joinCode=join_code)
+
+
+@app.post("/assign_project", response_model=DirectAssignmentResponse)
+async def assign_project_to_team(request: DirectAssignmentRequest):
+    """
+    Directly assign a project to a specific team and generate initial task breakdown
+    
+    This endpoint is called after the manager confirms a team recommendation from the AI.
+    It creates the assignment in Firestore and generates an initial task breakdown based
+    on project requirements and team member skills.
+    
+    Args:
+        request: DirectAssignmentRequest with projectId, teamId, and optional reasoning
+    
+    Returns:
+        Assignment details with generated tasks assigned to specific developers
+    """
+    try:
+        # Load data
+        teams, projects, developers = await asyncio.gather(
+            load_teams(),
+            load_projects(),
+            load_developers()
+        )
+        
+        # Find the project and team
+        project = next((p for p in projects if p.get("id") == request.projectId), None)
+        team = next((t for t in teams if t.get("id") == request.teamId), None)
+        
+        if not project:
+            raise HTTPException(status_code=404, detail=f"Project {request.projectId} not found")
+        if not team:
+            raise HTTPException(status_code=404, detail=f"Team {request.teamId} not found")
+        
+        # Generate initial task breakdown
+        tasks = generate_initial_tasks(project, team, developers)
+        
+        if not tasks:
+            raise HTTPException(status_code=400, detail="Unable to generate tasks - team has no members")
+        
+        # Persist to Firestore
+        def _persist() -> str:
+            db = get_firestore_client()
+            tenant_ref = db.collection("tenants").document(DEFAULT_TENANT_ID)
+            
+            # Update project
+            project_ref = tenant_ref.collection("projects").document(request.projectId)
+            now = admin_firestore.SERVER_TIMESTAMP
+            project_ref.set({
+                "status": "assigned",
+                "assignedTeamId": request.teamId,
+                "updatedAt": now,
+            }, merge=True)
+            
+            # Separate tasks into team assignments and bounties
+            team_tasks = [t for t in tasks if t.get("type") == "team-assignment"]
+            bounty_tasks = [t for t in tasks if t.get("type") == "bounty"]
+            
+            # Create assignment with team tasks only
+            assignments_ref = tenant_ref.collection("assignments")
+            assignment_ref = assignments_ref.document()
+            
+            assignment_payload = {
+                "projectId": request.projectId,
+                "teamId": request.teamId,
+                "tenantId": DEFAULT_TENANT_ID,
+                "status": "in-progress",
+                "reasoning": request.reasoning or "Manager selected based on AI recommendation",
+                "progress": 0,
+                "createdAt": now,
+                "updatedAt": now,
+                "tasks": team_tasks,  # Only team-assigned tasks
+            }
+            
+            assignment_ref.set(assignment_payload)
+            
+            # Create bounties in separate collection
+            if bounty_tasks:
+                bounties_ref = tenant_ref.collection("bounties")
+                for bounty in bounty_tasks:
+                    bounty_ref = bounties_ref.document()
+                    bounty_payload = {
+                        **bounty,
+                        "projectId": request.projectId,
+                        "assignmentId": assignment_ref.id,
+                        "teamId": request.teamId,
+                        "isPublic": True,
+                        "status": "open",
+                        "createdAt": now,
+                        "updatedAt": now,
+                    }
+                    # Remove fields that don't apply to bounties
+                    bounty_payload.pop("assignedTo", None)
+                    bounty_payload.pop("assignedToName", None)
+                    bounty_ref.set(bounty_payload)
+            
+            # Update team workload
+            team_ref = tenant_ref.collection("teams").document(request.teamId)
+            team_ref.set({
+                "current_workload": admin_firestore.Increment(1),
+                "currentWorkload": admin_firestore.Increment(1),
+                "updatedAt": now,
+            }, merge=True)
+            
+            return assignment_ref.id
+        
+        try:
+            assignment_id = await asyncio.to_thread(_persist)
+        except FirebaseInitializationError:
+            logger.warning("Firebase not configured; assignment not persisted")
+            assignment_id = f"local_{request.projectId}_{request.teamId}"
+        except exceptions.GoogleCloudError as exc:
+            logger.error("Firestore error during assignment: %s", exc)
+            raise HTTPException(status_code=500, detail=f"Database error: {exc}") from exc
+        
+        return DirectAssignmentResponse(
+            success=True,
+            assignmentId=assignment_id,
+            projectId=request.projectId,
+            teamId=request.teamId,
+            teamName=team.get("name", "Unknown Team"),
+            tasks=[TaskDetail(**task) for task in tasks],
+            message=f"Project assigned to {team.get('name')} with {len(tasks)} tasks generated"
+        )
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Error during project assignment: %s", e)
+        raise HTTPException(status_code=500, detail=f"Assignment failed: {str(e)}")
+
+
+@app.post("/bounties", response_model=BountyResponse)
+async def create_bounty(request: BountyCreateRequest):
+    """
+    Create a new standalone bounty
+    
+    This endpoint allows managers to create side bounties for simple tasks
+    that can be picked up by any available developer.
+    """
+    try:
+        def _persist() -> Dict:
+            db = get_firestore_client()
+            tenant_ref = db.collection("tenants").document(DEFAULT_TENANT_ID)
+            bounties_ref = tenant_ref.collection("bounties")
+            bounty_ref = bounties_ref.document()
+            
+            now = admin_firestore.SERVER_TIMESTAMP
+            bounty_payload = {
+                "title": request.title,
+                "description": request.description,
+                "estimatedHours": request.estimatedHours,
+                "skills": request.skills,
+                "priority": request.priority or "medium",
+                "status": "available",
+                "isPublic": True,
+                "linkedProjectId": request.linkedProjectId,
+                "reward": request.reward,
+                "deadline": request.deadline,
+                "createdBy": "manager",  # TODO: Get from auth context
+                "createdAt": now,
+                "updatedAt": now,
+            }
+            
+            bounty_ref.set(bounty_payload)
+            
+            # Return with document ID and timestamps as integers
+            result = bounty_payload.copy()
+            result["id"] = bounty_ref.id
+            result["createdAt"] = int(datetime.now().timestamp() * 1000)
+            return result
+        
+        bounty = await asyncio.to_thread(_persist)
+        return BountyResponse(**bounty)
+    
+    except Exception as e:
+        logger.error("Error creating bounty: %s", e)
+        raise HTTPException(status_code=500, detail=f"Failed to create bounty: {str(e)}")
+
+
+@app.get("/bounties", response_model=BountyListResponse)
+async def list_bounties(status: Optional[str] = None, skill: Optional[str] = None):
+    """
+    List all available bounties with optional filtering
+    
+    Query parameters:
+    - status: Filter by bounty status (available, claimed, review, completed)
+    - skill: Filter by required skill
+    """
+    try:
+        def _fetch() -> List[Dict]:
+            db = get_firestore_client()
+            tenant_ref = db.collection("tenants").document(DEFAULT_TENANT_ID)
+            bounties_ref = tenant_ref.collection("bounties")
+            
+            query = bounties_ref
+            if status:
+                query = query.where("status", "==", status)
+            
+            bounties = []
+            for doc in query.stream():
+                bounty_data = doc.to_dict() or {}
+                bounty_data["id"] = doc.id
+                
+                # Filter by skill if provided
+                if skill and skill not in bounty_data.get("skills", []):
+                    continue
+                
+                # Set defaults for missing fields
+                if "createdBy" not in bounty_data:
+                    bounty_data["createdBy"] = "system"
+                if "priority" not in bounty_data:
+                    bounty_data["priority"] = "medium"
+                if "status" not in bounty_data:
+                    bounty_data["status"] = "available"
+                
+                # Convert timestamps
+                if "createdAt" in bounty_data and hasattr(bounty_data["createdAt"], "timestamp"):
+                    bounty_data["createdAt"] = int(bounty_data["createdAt"].timestamp() * 1000)
+                elif "createdAt" not in bounty_data:
+                    bounty_data["createdAt"] = int(datetime.now().timestamp() * 1000)
+                    
+                if "claimedAt" in bounty_data and hasattr(bounty_data["claimedAt"], "timestamp"):
+                    bounty_data["claimedAt"] = int(bounty_data["claimedAt"].timestamp() * 1000)
+                
+                bounties.append(bounty_data)
+            
+            return bounties
+        
+        bounties = await asyncio.to_thread(_fetch)
+        return BountyListResponse(bounties=[BountyResponse(**b) for b in bounties], total=len(bounties))
+    
+    except Exception as e:
+        logger.error("Error listing bounties: %s", e)
+        raise HTTPException(status_code=500, detail=f"Failed to list bounties: {str(e)}")
+
+
+@app.post("/bounties/{bounty_id}/claim")
+async def claim_bounty(bounty_id: str, request: BountyClaimRequest):
+    """
+    Claim an available bounty
+    
+    Allows a developer to claim an open bounty and start working on it.
+    """
+    try:
+        def _claim() -> Dict:
+            db = get_firestore_client()
+            tenant_ref = db.collection("tenants").document(DEFAULT_TENANT_ID)
+            bounty_ref = tenant_ref.collection("bounties").document(bounty_id)
+            
+            bounty_doc = bounty_ref.get()
+            if not bounty_doc.exists:
+                raise HTTPException(status_code=404, detail="Bounty not found")
+            
+            bounty_data = bounty_doc.to_dict() or {}
+            if bounty_data.get("status") not in ["available", "open"]:
+                raise HTTPException(status_code=400, detail="Bounty is not available")
+            
+            now = admin_firestore.SERVER_TIMESTAMP
+            bounty_ref.update({
+                "status": "claimed",
+                "claimedBy": request.developerId,
+                "claimedByName": request.developerName,
+                "claimedAt": now,
+                "updatedAt": now,
+            })
+            
+            result = bounty_data.copy()
+            result["id"] = bounty_id
+            result["status"] = "claimed"
+            result["claimedBy"] = request.developerId
+            result["claimedByName"] = request.developerName
+            result["claimedAt"] = int(datetime.now().timestamp() * 1000)
+            
+            # Convert createdAt if needed
+            if "createdAt" in result and hasattr(result["createdAt"], "timestamp"):
+                result["createdAt"] = int(result["createdAt"].timestamp() * 1000)
+            
+            return result
+        
+        bounty = await asyncio.to_thread(_claim)
+        return BountyResponse(**bounty)
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Error claiming bounty: %s", e)
+        raise HTTPException(status_code=500, detail=f"Failed to claim bounty: {str(e)}")
+
+
+@app.put("/bounties/{bounty_id}")
+async def update_bounty(bounty_id: str, request: Dict):
+    """
+    Update bounty status or details
+    
+    Allows updating bounty information like status, description, etc.
+    """
+    try:
+        def _update() -> Dict:
+            db = get_firestore_client()
+            tenant_ref = db.collection("tenants").document(DEFAULT_TENANT_ID)
+            bounty_ref = tenant_ref.collection("bounties").document(bounty_id)
+            
+            bounty_doc = bounty_ref.get()
+            if not bounty_doc.exists:
+                raise HTTPException(status_code=404, detail="Bounty not found")
+            
+            # Update allowed fields
+            update_data = {}
+            allowed_fields = ["status", "description", "estimatedHours", "priority", "deadline"]
+            for field in allowed_fields:
+                if field in request:
+                    update_data[field] = request[field]
+            
+            if update_data:
+                update_data["updatedAt"] = admin_firestore.SERVER_TIMESTAMP
+                bounty_ref.update(update_data)
+            
+            # Get updated document
+            bounty_data = bounty_ref.get().to_dict() or {}
+            bounty_data["id"] = bounty_id
+            
+            # Convert timestamps
+            if "createdAt" in bounty_data and hasattr(bounty_data["createdAt"], "timestamp"):
+                bounty_data["createdAt"] = int(bounty_data["createdAt"].timestamp() * 1000)
+            if "claimedAt" in bounty_data and hasattr(bounty_data["claimedAt"], "timestamp"):
+                bounty_data["claimedAt"] = int(bounty_data["claimedAt"].timestamp() * 1000)
+            
+            return bounty_data
+        
+        bounty = await asyncio.to_thread(_update)
+        return BountyResponse(**bounty)
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Error updating bounty: %s", e)
+        raise HTTPException(status_code=500, detail=f"Failed to update bounty: {str(e)}")
+
+
+@app.post("/bounties/{bounty_id}/complete")
+async def complete_bounty(bounty_id: str):
+    """
+    Mark a bounty as completed
+    
+    Called by a developer when they finish work on a claimed bounty.
+    """
+    try:
+        def _complete() -> Dict:
+            db = get_firestore_client()
+            tenant_ref = db.collection("tenants").document(DEFAULT_TENANT_ID)
+            bounty_ref = tenant_ref.collection("bounties").document(bounty_id)
+            
+            bounty_doc = bounty_ref.get()
+            if not bounty_doc.exists:
+                raise HTTPException(status_code=404, detail="Bounty not found")
+            
+            bounty_data = bounty_doc.to_dict() or {}
+            if bounty_data.get("status") not in ["claimed"]:
+                raise HTTPException(status_code=400, detail="Bounty cannot be completed in current status")
+            
+            now = admin_firestore.SERVER_TIMESTAMP
+            bounty_ref.update({
+                "status": "completed",
+                "updatedAt": now,
+            })
+            
+            result = bounty_data.copy()
+            result["id"] = bounty_id
+            result["status"] = "completed"
+            
+            # Convert timestamps
+            if "createdAt" in result and hasattr(result["createdAt"], "timestamp"):
+                result["createdAt"] = int(result["createdAt"].timestamp() * 1000)
+            if "claimedAt" in result and hasattr(result["claimedAt"], "timestamp"):
+                result["claimedAt"] = int(result["claimedAt"].timestamp() * 1000)
+            
+            return result
+        
+        bounty = await asyncio.to_thread(_complete)
+        return BountyResponse(**bounty)
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Error completing bounty: %s", e)
+        raise HTTPException(status_code=500, detail=f"Failed to complete bounty: {str(e)}")
+
+
+@app.post("/finalize_assignment", response_model=FinalizeAssignmentResponse)
+async def finalize_assignment(request: FinalizeAssignmentRequest):
+    """
+    Finalize an assignment by saving final task breakdown
+    
+    This endpoint:
+    1. Updates the assignment document with finalized team tasks
+    2. Creates individual bounty documents for each bounty task
+    3. Updates project status to in-progress
+    4. Returns summary of what was saved
+    """
+    try:
+        def _persist() -> Dict[str, int]:
+            db = get_firestore_client()
+            tenant_ref = db.collection("tenants").document(DEFAULT_TENANT_ID)
+            now = admin_firestore.SERVER_TIMESTAMP
+            
+            # Update assignment with finalized team tasks
+            assignment_ref = tenant_ref.collection("assignments").document(request.assignmentId)
+            
+            # Convert team tasks to dict format
+            team_tasks_data = [task.dict() for task in request.teamTasks]
+            
+            # Log assignments for debugging
+            logger.info(f"Finalizing assignment {request.assignmentId} with {len(team_tasks_data)} team tasks")
+            for task in team_tasks_data:
+                if task.get('assignedToId'):
+                    logger.info(f"  Task '{task['title']}' assigned to {task.get('assignedToName')} ({task.get('assignedToId')})")
+                else:
+                    logger.warning(f"  Task '{task['title']}' has NO ASSIGNMENT")
+            
+            assignment_ref.update({
+                "tasks": team_tasks_data,
+                "status": "in-progress",
+                "updatedAt": now,
+            })
+            
+            # Create individual bounty documents
+            bounties_created = 0
+            if request.bountyTasks:
+                bounties_ref = tenant_ref.collection("bounties")
+                for bounty_task in request.bountyTasks:
+                    bounty_ref = bounties_ref.document()
+                    bounty_payload = {
+                        "title": bounty_task.title,
+                        "description": bounty_task.description,
+                        "estimatedHours": bounty_task.estimatedHours,
+                        "skills": bounty_task.skills,
+                        "priority": bounty_task.priority or "medium",
+                        "status": "open",
+                        "isPublic": True,
+                        "projectId": request.projectId,
+                        "assignmentId": request.assignmentId,
+                        "teamId": request.teamId,
+                        "createdBy": "manager",
+                        "createdAt": now,
+                        "updatedAt": now,
+                    }
+                    bounty_ref.set(bounty_payload)
+                    bounties_created += 1
+            
+            # Update project status to in-progress
+            project_ref = tenant_ref.collection("projects").document(request.projectId)
+            project_ref.update({
+                "status": "in-progress",
+                "updatedAt": now,
+            })
+            
+            return {
+                "teamTasksCount": len(request.teamTasks),
+                "bountiesCreated": bounties_created,
+            }
+        
+        result = await asyncio.to_thread(_persist)
+        
+        return FinalizeAssignmentResponse(
+            success=True,
+            assignmentId=request.assignmentId,
+            teamTasksCount=result["teamTasksCount"],
+            bountiesCreated=result["bountiesCreated"],
+            message=f"Assignment finalized: {result['teamTasksCount']} team tasks, {result['bountiesCreated']} bounties created"
+        )
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Error finalizing assignment: %s", e)
+        raise HTTPException(status_code=500, detail=f"Failed to finalize assignment: {str(e)}")
+
+
+@app.delete("/assignments/{assignment_id}")
+async def delete_assignment(assignment_id: str):
+    """
+    Delete an assignment and its associated tasks
+    
+    Removes an assignment from the database and all its related data.
+    """
+    try:
+        def _delete() -> Dict:
+            db = get_firestore_client()
+            tenant_ref = db.collection("tenants").document(DEFAULT_TENANT_ID)
+            
+            logger.info(f"Attempting to delete assignment: {assignment_id}")
+            
+            # First try to find in tenant assignments collection
+            assignment_ref = tenant_ref.collection("assignments").document(assignment_id)
+            assignment_doc = assignment_ref.get()
+            
+            if assignment_doc.exists:
+                logger.info(f"Found assignment in tenants/{DEFAULT_TENANT_ID}/assignments/{assignment_id}")
+                # Delete the assignment
+                assignment_ref.delete()
+                logger.info(f"Successfully deleted assignment from tenant collection")
+                return {
+                    "success": True,
+                    "message": f"Assignment {assignment_id} deleted successfully"
+                }
+            
+            logger.info(f"Assignment not found in tenant collection, searching collection group...")
+            
+            # If not found, search in collection group (assignments under projects)
+            # We need to iterate through the collection group and find matching document ID
+            assignments = db.collection_group("assignments").stream()
+            
+            found = False
+            count = 0
+            for doc in assignments:
+                count += 1
+                logger.info(f"Checking assignment {doc.id} at path: {doc.reference.path}")
+                if doc.id == assignment_id:
+                    logger.info(f"Found matching assignment! Deleting from: {doc.reference.path}")
+                    doc.reference.delete()
+                    found = True
+                    break
+            
+            logger.info(f"Scanned {count} assignments in collection group")
+            
+            if not found:
+                logger.warning(f"Assignment {assignment_id} not found anywhere")
+                return {"error": "Assignment not found", "success": False}
+            
+            logger.info(f"Successfully deleted assignment {assignment_id}")
+            return {
+                "success": True,
+                "message": f"Assignment {assignment_id} deleted successfully"
+            }
+        
+        result = await asyncio.to_thread(_delete)
+        
+        if not result.get("success"):
+            raise HTTPException(status_code=404, detail=result.get("error", "Assignment not found"))
+        
+        return result
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Error deleting assignment: %s", e)
+        raise HTTPException(status_code=500, detail=f"Failed to delete assignment: {str(e)}")
+        logger.error("Error deleting assignment: %s", e)
+        raise HTTPException(status_code=500, detail=f"Failed to delete assignment: {str(e)}")
 
 
 # ============================================================================

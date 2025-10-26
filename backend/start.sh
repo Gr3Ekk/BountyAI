@@ -29,6 +29,14 @@ fi
 echo "🔌 Activating virtual environment..."
 source venv/bin/activate
 
+# Load environment variables from .env file BEFORE starting server
+if [ -f ".env" ]; then
+    echo "🔑 Loading environment variables from .env..."
+    set -a
+    source .env
+    set +a
+fi
+
 # Install/update dependencies
 echo "📚 Checking dependencies..."
 if [ ! -f "venv/lib/python*/site-packages/fastapi/__init__.py" 2>/dev/null ]; then
@@ -48,5 +56,5 @@ echo ""
 echo "Press Ctrl+C to stop the server"
 echo ""
 
-# Start the server
+# Start the server (environment already loaded above)
 python -m uvicorn main:app --host 0.0.0.0 --port 8000

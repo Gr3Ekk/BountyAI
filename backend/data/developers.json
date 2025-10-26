@@ -18,6 +18,42 @@
     "updatedAt": "2025-10-23T07:15:00Z"
   },
   {
+    "id": "dev_marcus",
+    "displayName": "Marcus Liu",
+    "email": "marcus.liu@bountyai.dev",
+    "roles": ["developer"],
+    "skills": ["frontend", "react", "typescript"],
+    "primaryTeamId": "team_alpha",
+    "teamName": "Alpha Pilots",
+    "timezone": "America/New_York",
+    "availability": {
+      "hoursPerWeek": 40,
+      "updatedAt": "2025-10-22T09:00:00Z"
+    },
+    "activeAssignmentCount": 0,
+    "photoURL": "https://avatars.githubusercontent.com/u/0000006?v=4",
+    "createdAt": "2025-03-10T10:00:00Z",
+    "updatedAt": "2025-10-24T14:00:00Z"
+  },
+  {
+    "id": "dev_sofia",
+    "displayName": "Sofia Rodriguez",
+    "email": "sofia.r@bountyai.dev",
+    "roles": ["developer"],
+    "skills": ["frontend", "ui/ux", "design"],
+    "primaryTeamId": "team_alpha",
+    "teamName": "Alpha Pilots",
+    "timezone": "Europe/Madrid",
+    "availability": {
+      "hoursPerWeek": 35,
+      "updatedAt": "2025-10-21T11:30:00Z"
+    },
+    "activeAssignmentCount": 1,
+    "photoURL": "https://avatars.githubusercontent.com/u/0000007?v=4",
+    "createdAt": "2025-04-05T15:20:00Z",
+    "updatedAt": "2025-10-23T16:45:00Z"
+  },
+  {
     "id": "dev_samuel",
     "displayName": "Samuel Ortiz",
     "email": "samuel.ortiz@bountyai.dev",
@@ -34,6 +70,42 @@
     "photoURL": "https://avatars.githubusercontent.com/u/0000002?v=4",
     "createdAt": "2025-03-04T14:45:00Z",
     "updatedAt": "2025-10-21T18:05:00Z"
+  },
+  {
+    "id": "dev_priya",
+    "displayName": "Priya Patel",
+    "email": "priya.p@bountyai.dev",
+    "roles": ["developer"],
+    "skills": ["backend", "python", "database"],
+    "primaryTeamId": "team_beta",
+    "teamName": "Beta Crew",
+    "timezone": "Asia/Kolkata",
+    "availability": {
+      "hoursPerWeek": 40,
+      "updatedAt": "2025-10-20T08:15:00Z"
+    },
+    "activeAssignmentCount": 0,
+    "photoURL": "https://avatars.githubusercontent.com/u/0000008?v=4",
+    "createdAt": "2025-03-15T12:30:00Z",
+    "updatedAt": "2025-10-24T10:20:00Z"
+  },
+  {
+    "id": "dev_james",
+    "displayName": "James Chen",
+    "email": "james.c@bountyai.dev",
+    "roles": ["developer"],
+    "skills": ["backend", "api", "database"],
+    "primaryTeamId": "team_beta",
+    "teamName": "Beta Crew",
+    "timezone": "America/Los_Angeles",
+    "availability": {
+      "hoursPerWeek": 36,
+      "updatedAt": "2025-10-19T14:45:00Z"
+    },
+    "activeAssignmentCount": 1,
+    "photoURL": "https://avatars.githubusercontent.com/u/0000009?v=4",
+    "createdAt": "2025-04-20T09:00:00Z",
+    "updatedAt": "2025-10-22T11:30:00Z"
   },
   {
     "id": "dev_amara",
@@ -54,6 +126,24 @@
     "updatedAt": "2025-10-22T12:55:00Z"
   },
   {
+    "id": "dev_yuki",
+    "displayName": "Yuki Tanaka",
+    "email": "yuki.t@bountyai.dev",
+    "roles": ["developer"],
+    "skills": ["devops", "infrastructure", "database"],
+    "primaryTeamId": "team_gamma",
+    "teamName": "Gamma Squadron",
+    "timezone": "Asia/Tokyo",
+    "availability": {
+      "hoursPerWeek": 38,
+      "updatedAt": "2025-10-21T06:30:00Z"
+    },
+    "activeAssignmentCount": 1,
+    "photoURL": "https://avatars.githubusercontent.com/u/0000010?v=4",
+    "createdAt": "2025-05-01T13:45:00Z",
+    "updatedAt": "2025-10-23T09:15:00Z"
+  },
+  {
     "id": "dev_nova",
     "displayName": "Nova Chen",
     "email": "nova.chen@bountyai.dev",
@@ -72,6 +162,24 @@
     "updatedAt": "2025-10-24T06:45:00Z"
   },
   {
+    "id": "dev_alex",
+    "displayName": "Alex Rivera",
+    "email": "alex.r@bountyai.dev",
+    "roles": ["developer"],
+    "skills": ["fullstack", "backend", "frontend"],
+    "primaryTeamId": "team_delta",
+    "teamName": "Delta Force",
+    "timezone": "America/Chicago",
+    "availability": {
+      "hoursPerWeek": 40,
+      "updatedAt": "2025-10-20T10:00:00Z"
+    },
+    "activeAssignmentCount": 1,
+    "photoURL": "https://avatars.githubusercontent.com/u/0000011?v=4",
+    "createdAt": "2025-06-01T14:20:00Z",
+    "updatedAt": "2025-10-24T08:30:00Z"
+  },
+  {
     "id": "dev_eli",
     "displayName": "Eli Morales",
     "email": "eli.morales@bountyai.dev",
@@ -88,5 +196,23 @@
     "photoURL": "https://avatars.githubusercontent.com/u/0000005?v=4",
     "createdAt": "2025-06-08T17:35:00Z",
     "updatedAt": "2025-10-23T11:05:00Z"
+  },
+  {
+    "id": "dev_maya",
+    "displayName": "Maya Johnson",
+    "email": "maya.j@bountyai.dev",
+    "roles": ["developer"],
+    "skills": ["ai/ml", "python", "data-science"],
+    "primaryTeamId": "team_echo",
+    "teamName": "Echo Knights",
+    "timezone": "America/Los_Angeles",
+    "availability": {
+      "hoursPerWeek": 40,
+      "updatedAt": "2025-10-22T12:00:00Z"
+    },
+    "activeAssignmentCount": 1,
+    "photoURL": "https://avatars.githubusercontent.com/u/0000012?v=4",
+    "createdAt": "2025-06-15T10:15:00Z",
+    "updatedAt": "2025-10-24T07:20:00Z"
   }
 ]

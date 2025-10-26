@@ -12,7 +12,7 @@
   body {
     @apply bg-background text-foreground font-sans antialiased;
     background-image: radial-gradient(circle at 20% 20%, rgba(177, 119, 255, 0.12), transparent 55%),
-      radial-gradient(circle at 80% 0%, rgba(47, 255, 243, 0.18), transparent 45%),
+      radial-gradient(circle at 80% 0%, rgba(75, 45, 191, 0.22), transparent 45%),
       radial-gradient(circle at 50% 100%, rgba(255, 138, 76, 0.12), transparent 55%);
     min-height: 100vh;
   }

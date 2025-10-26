@@ -85,6 +85,17 @@ npm run dev
 
 The UI is served at `http://localhost:5173` and proxies API calls to the FastAPI backend.
 
+### Cloudflare Worker (AI Copilot)
+
+```bash
+cd cloudflare
+npm install
+wrangler login  # once per machine
+npm run deploy
+```
+
+The deploy step prints the Worker URL (for example `https://bountyai-launch-copilot.<account>.workers.dev`). Copy that into `frontend/.env` as `VITE_CLOUDFLARE_WORKER_URL`. If you configure a shared secret, store it in the Worker via `wrangler secret put WORKER_AUTH_TOKEN` and mirror the value in `VITE_CLOUDFLARE_WORKER_TOKEN` so the frontend is authorized.
+
 ### Firebase CLI (Optional but recommended)
 
 ```bash

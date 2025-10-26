@@ -1,23 +1,33 @@
 import { NavLink } from 'react-router-dom';
 import { cn } from '../../lib/utils';
 import { useAuth } from '../../context/AuthContext';
+import type { UserRole } from '../../types/auth';
+import logoImage from '../../assets/sidelogo.jpeg';
 
-const navByRole = {
+interface NavItem {
+  to: string;
+  label: string;
+  icon?: string;
+  subtitle?: string;
+  special?: boolean;
+}
+
+const navByRole: Record<UserRole, NavItem[]> = {
   manager: [
-    {
-      label: 'Mission Control',
-      to: '/manager',
-      subtitle: 'Manager dashboard',
+    { 
+      to: '/manager/steve', 
+      label: 'S.T.E.V.E', 
+      subtitle: 'AI Copilot',
+      special: true 
     },
+    { to: '/manager', label: 'Dashboard' },
+    { to: '/manager/side-bounties', label: 'Side Bounties' },
   ],
   developer: [
-    {
-      label: 'Crew Hub',
-      to: '/developer',
-      subtitle: 'Developer workspace',
-    },
+    { to: '/developer', label: 'Dashboard' },
+    { to: '/developer/side-bounties', label: 'Side Bounties' },
   ],
-} as const;
+};
 
 export function Sidebar() {
   const {
@@ -28,68 +38,77 @@ export function Sidebar() {
   const navItems = role ? navByRole[role] : [];
 
   return (
-    <aside className="relative flex h-full w-72 flex-col justify-between border-r border-black/10 bg-panel/80 p-6 shadow-panel backdrop-blur-lg">
-      <div className="space-y-10">
-        <div>
-          <div className="text-xs uppercase tracking-[0.6em] text-foreground/60">BOUNTYAI</div>
-          <h1 className="mt-3 text-2xl font-semibold text-foreground">
-            Operations Desk
-          </h1>
-          {role && (
-            <div className="mt-3 space-y-1 text-sm text-foreground/60">
-              <div className="font-semibold text-foreground">{name}</div>
-              <div className="uppercase tracking-[0.3em] text-xs text-foreground/50">
-                {role === 'manager' ? 'Manager' : 'Developer'}
-              </div>
-              {role === 'manager' && organization && (
-                <div className="text-xs text-foreground/50">{organization}</div>
-              )}
-              {role === 'developer' && teamName && (
-                <div className="text-xs text-foreground/50">{teamName}</div>
-              )}
-            </div>
-          )}
+    <aside className="fixed left-0 top-0 bottom-0 flex h-screen w-72 flex-col justify-between border-r border-white/10 bg-black p-6 overflow-hidden">
+      <div className="space-y-10 flex-shrink-0">
+        <div className="flex items-center justify-center">
+          <img 
+            src={logoImage} 
+            alt="BountyAI Logo" 
+            className="w-32 h-auto rounded-lg"
+          />
         </div>
 
         <nav className="space-y-2">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              className={({ isActive }) =>
-                cn(
-                  'block rounded-xl border border-transparent px-4 py-4 transition-all',
-                  'hover:border-neon-teal/30 hover:shadow-glow',
-                  isActive
-                    ? 'border-neon-teal/60 bg-white/80 text-foreground shadow-glow'
-                    : 'text-foreground/70'
-                )
-              }
-            >
-              <div className="text-sm font-semibold tracking-wide">
-                {item.label}
-              </div>
-              <div className="text-xs uppercase tracking-[0.3em] text-foreground/50">
-                {item.subtitle}
-              </div>
-            </NavLink>
-          ))}
+          {navItems.map((item) => {
+            return (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                className={({ isActive }) =>
+                  cn(
+                    'block rounded-xl border px-4 py-4 transition-all',
+                    item.special
+                      ? 'border-purple-500/50 bg-gradient-to-r from-purple-500/10 to-blue-500/10 hover:from-purple-500/20 hover:to-blue-500/20'
+                      : 'border-white/10 hover:border-white/30 hover:bg-white/5',
+                    isActive && !item.special
+                      ? 'border-white/30 bg-white/10 text-white'
+                      : item.special && isActive
+                      ? 'border-purple-500/70 bg-gradient-to-r from-purple-500/20 to-blue-500/20'
+                      : 'text-white/70'
+                  )
+                }
+              >
+                <div className="flex items-center gap-3">
+                  {item.icon && <span className="text-lg">{item.icon}</span>}
+                  <div className="flex-1">
+                    <div className="text-sm font-semibold tracking-wide text-white">
+                      {item.label}
+                    </div>
+                    {item.subtitle && (
+                      <div className="text-xs uppercase tracking-[0.3em] text-white/50">
+                        {item.subtitle}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </NavLink>
+            );
+          })}
         </nav>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-3 flex-shrink-0">
+        {role && (
+          <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+            <div className="text-xs uppercase tracking-[0.3em] text-white/50">
+              {role === 'manager' ? 'Manager' : 'Developer'}
+            </div>
+            <div className="mt-2 font-semibold text-white">{name}</div>
+            {role === 'manager' && organization && (
+              <div className="mt-1 text-xs text-white/50">{organization}</div>
+            )}
+            {role === 'developer' && teamName && (
+              <div className="mt-1 text-xs text-white/50">{teamName}</div>
+            )}
+          </div>
+        )}
+        
         <button
           onClick={logout}
-          className="w-full rounded-2xl border border-black/10 bg-transparent px-4 py-3 text-sm font-semibold uppercase tracking-[0.3em] text-foreground transition-colors hover:border-foreground/40"
+          className="w-full rounded-2xl border border-white/10 bg-transparent px-4 py-3 text-sm font-semibold uppercase tracking-[0.3em] text-white transition-colors hover:border-white/40 hover:bg-white/5"
         >
           Log Out
         </button>
-        <div className="rounded-xl border border-black/10 bg-white/60 p-4 text-xs uppercase tracking-[0.3em] text-foreground/50 shadow-panel">
-          <div>PRODUCTIVITY ENGINE</div>
-          <div className="mt-2 text-sm font-semibold tracking-wide text-foreground">
-            Control Suite v0.1.0
-          </div>
-        </div>
       </div>
     </aside>
   );

@@ -9,7 +9,7 @@ import {
   subscribeDevelopers,
   subscribeProjects,
   subscribeTeams,
-} from '../lib/firestoreData';
+} from '../lib/firestoreData.ts';
 import type { Assignment, Developer, Project, Team } from '../types/models';
 
 const DEFAULT_TENANT_ID = import.meta.env.VITE_FIREBASE_DEFAULT_TENANT_ID ?? 'default';
@@ -21,6 +21,7 @@ type TenantAwareOptions = {
 
 type QueryOptions<TData> = TenantAwareOptions & {
   initialData?: TData;
+  refetchInterval?: number | false;
 };
 
 function resolveTenantId(tenantId?: string) {
@@ -37,6 +38,7 @@ export function useTenantTeams(options: QueryOptions<Team[]> = {}) {
     queryFn: () => fetchTeams(tenantId),
     initialData: options.initialData ?? [],
     enabled: options.enabled ?? true,
+    refetchInterval: options.refetchInterval,
   });
 
   useEffect(() => {
@@ -44,10 +46,11 @@ export function useTenantTeams(options: QueryOptions<Team[]> = {}) {
       return;
     }
     const unsubscribe = subscribeTeams(tenantId, (teams) => {
+      console.log('Firestore update: received', teams.length, 'teams');
       queryClient.setQueryData(queryKey, teams);
     });
     return () => unsubscribe();
-  }, [tenantId, options.enabled, queryClient]);
+  }, [tenantId, options.enabled, queryClient, queryKey]);
 
   return queryResult;
 }
@@ -62,6 +65,7 @@ export function useTenantProjects(options: QueryOptions<Project[]> = {}) {
     queryFn: () => fetchProjects(tenantId),
     initialData: options.initialData ?? [],
     enabled: options.enabled ?? true,
+    refetchInterval: options.refetchInterval,
   });
 
   useEffect(() => {
@@ -69,10 +73,11 @@ export function useTenantProjects(options: QueryOptions<Project[]> = {}) {
       return;
     }
     const unsubscribe = subscribeProjects(tenantId, (projects) => {
+      console.log('Firestore update: received', projects.length, 'projects');
       queryClient.setQueryData(queryKey, projects);
     });
     return () => unsubscribe();
-  }, [tenantId, options.enabled, queryClient]);
+  }, [tenantId, options.enabled, queryClient, queryKey]);
 
   return queryResult;
 }
@@ -87,6 +92,7 @@ export function useTenantDevelopers(options: QueryOptions<Developer[]> = {}) {
     queryFn: () => fetchDevelopers(tenantId),
     initialData: options.initialData ?? [],
     enabled: options.enabled ?? true,
+    refetchInterval: options.refetchInterval,
   });
 
   useEffect(() => {
@@ -94,10 +100,11 @@ export function useTenantDevelopers(options: QueryOptions<Developer[]> = {}) {
       return;
     }
     const unsubscribe = subscribeDevelopers(tenantId, (developers) => {
+      console.log('Firestore update: received', developers.length, 'developers');
       queryClient.setQueryData(queryKey, developers);
     });
     return () => unsubscribe();
-  }, [tenantId, options.enabled, queryClient]);
+  }, [tenantId, options.enabled, queryClient, queryKey]);
 
   return queryResult;
 }
@@ -112,6 +119,9 @@ export function useTenantAssignments(options: QueryOptions<Assignment[]> = {}) {
     queryFn: () => fetchAssignments(tenantId),
     initialData: options.initialData ?? [],
     enabled: options.enabled ?? true,
+    refetchInterval: options.refetchInterval,
+    staleTime: 0, // Always consider data stale
+    gcTime: 0, // Don't cache data (formerly cacheTime)
   });
 
   useEffect(() => {
@@ -119,10 +129,12 @@ export function useTenantAssignments(options: QueryOptions<Assignment[]> = {}) {
       return;
     }
     const unsubscribe = subscribeAssignments(tenantId, (assignments) => {
+      console.log('Firestore update: received', assignments.length, 'assignments');
+      console.log('Assignment IDs:', assignments.map(a => a.id));
       queryClient.setQueryData(queryKey, assignments);
     });
     return () => unsubscribe();
-  }, [tenantId, options.enabled, queryClient]);
+  }, [tenantId, options.enabled, queryClient, queryKey]);
 
   return queryResult;
 }

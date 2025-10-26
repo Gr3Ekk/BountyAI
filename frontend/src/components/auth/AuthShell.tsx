@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
+import logoImage from '../../assets/logo.jpeg';
 
 interface AuthShellProps {
   title: string;
@@ -13,22 +14,14 @@ export function AuthShell({ title, subtitle, children, footer }: AuthShellProps)
     <div className="grid min-h-screen grid-cols-1 lg:grid-cols-[1.05fr_0.95fr]">
       <div className="relative hidden overflow-hidden bg-foreground text-background lg:block">
         <div className="absolute inset-0 bg-gradient-to-br from-foreground via-foreground/90 to-foreground" />
-        <div className="relative flex h-full flex-col justify-between p-12">
-          <div className="space-y-4">
-            <Link to="/" className="text-xs uppercase tracking-[0.4em] text-background/60">
-              BOUNTYAI PLATFORM
-            </Link>
-            <h1 className="text-4xl font-semibold uppercase tracking-[0.3em]">
-              Mission Access Console
-            </h1>
-            <p className="max-w-md text-sm text-background/70">
-              Connect squads and managers in one unified control desk. Track production, launch bounties, and keep velocity steady.
-            </p>
-          </div>
-          <div className="space-y-3 text-sm text-background/50">
-            <p>Need a manager access code? Contact your ops lead.</p>
-            <p>Questions about deployment? Email pensonluis57@gmail.com.</p>
-          </div>
+        <div className="relative flex h-full flex-col items-center justify-center p-12">
+          <Link to="/" className="flex items-center justify-center">
+            <img 
+              src={logoImage} 
+              alt="BountyAI Logo" 
+              className="max-w-md w-full h-auto rounded-2xl shadow-2xl"
+            />
+          </Link>
         </div>
       </div>
 

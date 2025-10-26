@@ -65,7 +65,7 @@ def _seed_primary_collection(
     batch = db.batch()
     for entry in payload:
         doc_id = entry.get("id") or collection_ref.document().id
-        cleansed = {**entry}
+        cleansed = {k: v for k, v in entry.items() if k != "id"}
         batch.set(collection_ref.document(doc_id), cleansed)
 
     batch.commit()
